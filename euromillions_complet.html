@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur & Analyseur EuroMillions (Complet)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+            background-color: #f0f8ff; /* Bleu ciel clair */
+            color: #333;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .main-container, .analysis-container {
+            background-color: #ffffff;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 700px;
+            width: 95%;
+            margin-bottom: 25px;
+        }
+        h1 { color: #003399; margin-bottom: 15px; font-size: 1.8em; } /* Bleu EuroMillions */
+        h2 { color: #003399; margin-bottom: 10px; font-size: 1.5em; }
+        p.description {font-size:0.9em; color:#666; margin-bottom: 15px;}
+
+        .options-panel, .analysis-options {
+            background-color: #e9eff5; /* Bleu très clair */
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .options-panel h3, .analysis-options h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #003399;
+            font-size: 1.1em;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        .options-panel label, .analysis-options label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+        }
+        .options-panel input[type="checkbox"], .analysis-options input[type="number"] {
+            margin-right: 8px;
+            vertical-align: middle;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+         .analysis-options input[type="number"] { width: 60px; text-align: center; }
+
+        button {
+            background-color: #ffd700; /* Jaune étoile */
+            color: #003399; /* Bleu EuroMillions */
+            border: none;
+            padding: 12px 25px; font-size: 1.1em; font-weight: bold;
+            border-radius: 5px; cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            width: 100%; max-width: 300px;
+        }
+        button.secondary-action {
+            background-color: #0056b3; /* Bleu plus foncé */
+            color: white;
+        }
+        button.secondary-action:hover {
+            background-color: #003399;
+        }
+        button:hover { background-color: #f0c400; /* Jaune plus foncé */ }
+        button:active { transform: scale(0.98); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; color: #666;}
+
+        .numbers-display { margin-top: 5px; }
+        .number-group { margin-bottom: 15px; }
+        .number-group h4 { font-size: 1.3em; color: #555; margin-bottom: 8px; text-align:left; }
+        .number-ball, .star-ball, .hot-cold-ball {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%;
+            margin: 3px; font-size: 1.2em; font-weight: bold; color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+        }
+        .number-ball:hover, .star-ball:hover, .hot-cold-ball:hover { transform: scale(1.1); }
+
+        .number-ball { background-color: #003399; } /* Bleu EuroMillions */
+        .star-ball { background-color: #ffd700; color: #003399; } /* Jaune étoile */
+        
+        .hot-cold-ball { width: 35px; height: 35px; font-size: 1em; margin: 2px 3px; }
+        .hot-ball { background-color: #e60000; /* Rouge vif */}
+        .cold-ball { background-color: #007bff; /* Bleu clair */}
+        .hot-star { background-color: #ff8c00; /* Orange foncé */}
+        .cold-star { background-color: #17a2b8; /* Cyan */}
+
+        .placeholder, .error-message, .info-message {
+            font-style: italic; color: #888; display: block; margin: 8px 0; font-size: 0.9em;
+        }
+        .error-message { color: red; font-weight: bold; }
+        .info-message { color: green; font-weight: bold;}
+        .debug-attempts { font-size: 0.8em; color: #777; margin-top:5px;}
+
+        .hot-cold-results div { margin-bottom: 10px; }
+        .hot-cold-results h4 { font-size: 1.1em; color: #333; margin: 10px 0 5px 0; text-align: left;}
+        .hot-cold-list { text-align: left; }
+        .hot-cold-list span { margin-right: 5px; font-size: 0.9em; }
+        .frequency-note { font-size:0.8em; font-weight:normal; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Générateur EuroMillions</h1>
+        <p class="description">Cet outil vous aide à choisir des numéros pour l'EuroMillions en appliquant des filtres. Il ne garantit aucun gain et doit être utilisé pour le divertissement.</p>
+        
+        <div class="options-panel">
+            <h3>Options de Filtrage pour la Génération :</h3>
+            <label><input type="checkbox" id="filterAvoidHistory" checked> Éviter les combinaisons déjà sorties (nécessite <code>past_draws.json</code>)</label>
+            <label><input type="checkbox" id="filterAvoidSuites" checked> Éviter les suites de 3+ numéros consécutifs (ex: 7-8-9)</label>
+            <label><input type="checkbox" id="filterPairImpair"> Appliquer un équilibre Pairs/Impairs (au moins 2 de chaque type)</label>
+            <label><input type="checkbox" id="filterPetitGrand"> Appliquer un équilibre Petits(1-25)/Grands(26-50) (au moins 2 de chaque type)</label>
+        </div>
+
+        <button id="generateButton" disabled>🍀 Charger l'historique... 🍀</button>
+        <div id="loadingStatus" class="placeholder">Chargement de l'historique des tirages (<code>past_draws.json</code>)...</div>
+        <div id="attemptsInfo" class="debug-attempts"></div>
+
+        <div class="numbers-display">
+            <div class="number-group">
+                <h4>Numéros Principaux Générés :</h4>
+                <div id="mainNumbersContainer"><span class="placeholder">Configurez les options et cliquez sur "Générer".</span></div>
+            </div>
+            <div class="number-group">
+                <h4>Étoiles Générées :</h4>
+                <div id="starNumbersContainer"><span class="placeholder"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="analysis-container">
+        <h2>Analyse des Tendances (Chaud/Froid)</h2>
+        <p class="description">Basé sur les N derniers tirages de votre historique. Pour information seulement, non prédictif.</p>
+        <div class="analysis-options">
+            <h3>Options d'Analyse :</h3>
+            <label for="analysisWindow">Analyser les 
+                <input type="number" id="analysisWindow" value="50" min="5" max="1000"> derniers tirages.
+            </label>
+            <label for="displayCount">Afficher les 
+                <input type="number" id="displayCount" value="5" min="1" max="12"> plus chauds/froids.
+            </label>
+        </div>
+        <button id="analyzeTrendsButton" class="secondary-action" disabled>📊 Analyser les Tendances</button>
+        <div id="analysisResults" class="hot-cold-results">
+            <!-- Les résultats de l'analyse s'afficheront ici -->
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const generateButton = document.getElementById('generateButton');
+        const mainNumbersContainer = document.getElementById('mainNumbersContainer');
+        const starNumbersContainer = document.getElementById('starNumbersContainer');
+        const loadingStatus = document.getElementById('loadingStatus');
+        const attemptsInfo = document.getElementById('attemptsInfo');
+
+        const chkAvoidHistory = document.getElementById('filterAvoidHistory');
+        const chkAvoidSuites = document.getElementById('filterAvoidSuites');
+        const chkPairImpair = document.getElementById('filterPairImpair');
+        const chkPetitGrand = document.getElementById('filterPetitGrand');
+
+        const analyzeTrendsButton = document.getElementById('analyzeTrendsButton');
+        const analysisWindowInput = document.getElementById('analysisWindow');
+        const displayCountInput = document.getElementById('displayCount');
+        const analysisResultsContainer = document.getElementById('analysisResults');
+
+        // --- Data & State ---
+        let pastDrawsData = []; 
+
+        // --- Core Logic Functions (Génération & Analyse) ---
+        async function loadPastDraws() {
+            try {
+                const response = await fetch('past_draws.json');
+                if (!response.ok) throw new Error(`HTTP ${response.status} en chargeant 'past_draws.json'. Assurez-vous que le fichier est présent, au bon format, et que les plus récents sont en premier.`);
+                
+                const data = await response.json();
+                if (!Array.isArray(data)) throw new Error("'past_draws.json' doit contenir une liste (array) de tirages.");
+
+                pastDrawsData = data.map(draw => {
+                    if (!draw.numeros || !draw.etoiles || !Array.isArray(draw.numeros) || !Array.isArray(draw.etoiles) || draw.numeros.length !== 5 || draw.etoiles.length !== 2) {
+                        console.warn("Tirage au format invalide ignoré:", draw);
+                        return null;
+                    }
+                    return {
+                        date: draw.date || null, // Garder la date si présente
+                        numeros: [...draw.numeros].sort((a, b) => a - b),
+                        etoiles: [...draw.etoiles].sort((a, b) => a - b)
+                    };
+                }).filter(d => d !== null); // Retirer les tirages nuls (invalides)
+
+                if (pastDrawsData.length === 0 && data.length > 0) {
+                     throw new Error("Aucun tirage valide trouvé dans l'historique après filtrage. Vérifiez le format des numéros/étoiles.");
+                }
+                 if (pastDrawsData.length === 0 && data.length === 0) {
+                     loadingStatus.textContent = `L'historique 'past_draws.json' est vide. Certaines fonctionnalités seront limitées.`;
+                } else {
+                    loadingStatus.textContent = `Historique de ${pastDrawsData.length} tirages chargé avec succès.`;
+                }
+                loadingStatus.className = 'info-message';
+                generateButton.disabled = false;
+                analyzeTrendsButton.disabled = false;
+                generateButton.textContent = '🍀 Générer mes Numéros 🍀';
+            } catch (error) {
+                console.error("Erreur lors du chargement de l'historique:", error);
+                loadingStatus.textContent = `Erreur critique: ${error.message}`;
+                loadingStatus.className = 'error-message';
+                mainNumbersContainer.innerHTML = `<span class="error-message">Vérifiez la console (F12) et le fichier <code>past_draws.json</code>.</span>`;
+            }
+        }
+
+        function generateUniqueSortedNumbers(count, min, max) {
+            const numbers = new Set();
+            while (numbers.size < count) numbers.add(Math.floor(Math.random() * (max - min + 1)) + min);
+            return Array.from(numbers).sort((a, b) => a - b);
+        }
+
+        function arraysAreEqual(arr1, arr2) {
+            if (arr1.length !== arr2.length) return false;
+            for (let i = 0; i < arr1.length; i++) if (arr1[i] !== arr2[i]) return false;
+            return true;
+        }
+
+        function isCombinationAlreadyDrawn(mainNums, starNums, history) {
+            for (const pastDraw of history) {
+                if (arraysAreEqual(mainNums, pastDraw.numeros) && arraysAreEqual(starNums, pastDraw.etoiles)) return true;
+            }
+            return false;
+        }
+
+        function containsConsecutiveSuite(numbersArray, minSuiteLength = 3) {
+            if (numbersArray.length < minSuiteLength) return false;
+            for (let i = 0; i <= numbersArray.length - minSuiteLength; i++) {
+                let isSuite = true;
+                for (let j = 0; j < minSuiteLength - 1; j++) {
+                    if (numbersArray[i + j + 1] !== numbersArray[i + j] + 1) { isSuite = false; break; }
+                }
+                if (isSuite) return true;
+            }
+            return false;
+        }
+
+        function checkPairImpairEquilibrium(numbers, minEachType = 2) {
+            let evenCount = 0, oddCount = 0; 
+            numbers.forEach(n => (n % 2 === 0) ? evenCount++ : oddCount++); 
+            return evenCount >= minEachType && oddCount >= minEachType;
+        }
+
+        function checkPetitGrandEquilibrium(numbers, minEachType = 2, splitPoint = 25) {
+            let petitCount = 0, grandCount = 0; 
+            numbers.forEach(n => (n <= splitPoint) ? petitCount++ : grandCount++); 
+            return petitCount >= minEachType && grandCount >= minEachType;
+        }
+
+        async function generateAndDisplayUniqueCombination() {
+            if (chkAvoidHistory.checked && pastDrawsData.length === 0 && !generateButton.disabled) {
+                loadingStatus.textContent = "L'historique n'est pas chargé mais l'option 'Éviter combinaisons sorties' est cochée. Décochez-la ou rechargez la page avec un historique valide.";
+                loadingStatus.className = 'error-message';
+                return;
+            }
+            
+            generateButton.disabled = true;
+            mainNumbersContainer.innerHTML = '<span class="placeholder">Recherche d\'une combinaison selon vos critères...</span>';
+            starNumbersContainer.innerHTML = '';
+            attemptsInfo.textContent = '';
+
+            await new Promise(resolve => setTimeout(resolve, 10)); // Laisse le temps au DOM de se mettre à jour
+
+            let mainNumbers, starNumbers;
+            let isValidCombination = false;
+            let attempts = 0;
+            const maxAttempts = 75000; // Augmenté pour des filtres potentiellement restrictifs
+
+            do {
+                mainNumbers = generateUniqueSortedNumbers(5, 1, 50);
+                starNumbers = generateUniqueSortedNumbers(2, 1, 12);
+                attempts++;
+                let isRejectedByFilter = false;
+
+                if (chkAvoidHistory.checked && pastDrawsData.length > 0 && isCombinationAlreadyDrawn(mainNumbers, starNumbers, pastDrawsData)) {
+                    isRejectedByFilter = true;
+                }
+                if (!isRejectedByFilter && chkAvoidSuites.checked && containsConsecutiveSuite(mainNumbers, 3)) {
+                    isRejectedByFilter = true;
+                }
+                if (!isRejectedByFilter && chkPairImpair.checked && !checkPairImpairEquilibrium(mainNumbers, 2)) {
+                    isRejectedByFilter = true;
+                }
+                if (!isRejectedByFilter && chkPetitGrand.checked && !checkPetitGrandEquilibrium(mainNumbers, 2, 25)) {
+                    isRejectedByFilter = true;
+                }
+
+                if (!isRejectedByFilter) {
+                    isValidCombination = true;
+                }
+
+                if (attempts >= maxAttempts) {
+                    mainNumbersContainer.innerHTML = '<span class="error-message">Trop de tentatives pour trouver une combinaison valide. Essayez des filtres moins restrictifs ou vérifiez votre historique.</span>';
+                    starNumbersContainer.innerHTML = '';
+                    attemptsInfo.textContent = `Nombre maximum de ${maxAttempts} tentatives atteintes.`;
+                    generateButton.disabled = false; 
+                    return;
+                }
+            } while (!isValidCombination);
+            
+            attemptsInfo.textContent = `Combinaison valide trouvée après ${attempts} tentative(s).`;
+            mainNumbersContainer.innerHTML = '';
+            mainNumbers.forEach(n => mainNumbersContainer.innerHTML += `<span class="number-ball">${n}</span>`);
+            starNumbersContainer.innerHTML = '';
+            starNumbers.forEach(s => starNumbersContainer.innerHTML += `<span class="star-ball">${s}</span>`);
+            generateButton.disabled = false;
+        }
+
+        function calculateFrequencies(draws, type) { // type = 'numeros' ou 'etoiles'
+            const frequencies = {};
+            const maxNum = (type === 'numeros') ? 50 : 12;
+            for (let i = 1; i <= maxNum; i++) frequencies[i] = 0; // Initialiser
+
+            draws.forEach(draw => {
+                if (draw && draw[type]) { // Vérifier si draw et draw[type] existent
+                    draw[type].forEach(num => {
+                        if (frequencies.hasOwnProperty(num)) frequencies[num]++;
+                        else console.warn(`Numéro ${num} inattendu dans ${type}, ignoré.`);
+                    });
+                }
+            });
+            return frequencies;
+        }
+
+        function getHotColdNumbers(frequencies, count, sortOrder = 'desc') {
+            return Object.entries(frequencies)
+                .sort((a, b) => {
+                    const freqDiff = sortOrder === 'desc' ? b[1] - a[1] : a[1] - b[1];
+                    return freqDiff !== 0 ? freqDiff : parseInt(a[0]) - parseInt(b[0]); // Numéro croissant en cas d'égalité
+                })
+                .slice(0, count)
+                .map(entry => ({ num: parseInt(entry[0]), freq: entry[1] }));
+        }
+
+        function displayAnalysisResults(hotMain, coldMain, hotStars, coldStars) {
+            analysisResultsContainer.innerHTML = `
+                <div><h4>Numéros Principaux Chauds <span class="frequency-note">(les plus fréquents)</span>:</h4>
+                     <div class="hot-cold-list">${hotMain.map(item => `<span class="hot-cold-ball hot-ball" title="Sorti ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div>
+                <div><h4>Numéros Principaux Froids <span class="frequency-note">(les moins fréquents)</span>:</h4>
+                     <div class="hot-cold-list">${coldMain.map(item => `<span class="hot-cold-ball cold-ball" title="Sorti ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div>
+                <div><h4>Étoiles Chaudes <span class="frequency-note">(les plus fréquentes)</span>:</h4>
+                     <div class="hot-cold-list">${hotStars.map(item => `<span class="hot-cold-ball hot-star" title="Sortie ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div>
+                <div><h4>Étoiles Froides <span class="frequency-note">(les moins fréquentes)</span>:</h4>
+                     <div class="hot-cold-list">${coldStars.map(item => `<span class="hot-cold-ball cold-star" title="Sortie ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div>
+            `;
+        }
+
+        function handleAnalyzeTrends() {
+            if (pastDrawsData.length === 0) {
+                analysisResultsContainer.innerHTML = '<span class="error-message">L\'historique des tirages n\'est pas chargé ou est vide. Impossible d\'analyser.</span>';
+                return;
+            }
+
+            const windowSize = parseInt(analysisWindowInput.value);
+            const displayCount = parseInt(displayCountInput.value);
+
+            if (isNaN(windowSize) || windowSize < 1 || isNaN(displayCount) || displayCount < 1) {
+                analysisResultsContainer.innerHTML = '<span class="error-message">Veuillez entrer des valeurs numériques valides pour la fenêtre d\'analyse et le nombre à afficher.</span>';
+                return;
+            }
+
+            const actualWindowSize = Math.min(windowSize, pastDrawsData.length);
+            // Prend les N plus récents (suppose que pastDrawsData est trié du plus récent au plus ancien)
+            const drawsToAnalyze = pastDrawsData.slice(0, actualWindowSize); 
+
+            if (drawsToAnalyze.length === 0) {
+                 analysisResultsContainer.innerHTML = '<span class="info-message">Pas assez de données dans l\'historique pour la fenêtre spécifiée.</span>';
+                return;
+            }
+            analysisResultsContainer.innerHTML = `<span class="placeholder">Analyse des ${actualWindowSize} derniers tirages en cours...</span>`;
+
+            const mainFrequencies = calculateFrequencies(drawsToAnalyze, 'numeros');
+            const starFrequencies = calculateFrequencies(drawsToAnalyze, 'etoiles');
+
+            const hotMain = getHotColdNumbers(mainFrequencies, displayCount, 'desc');
+            const coldMain = getHotColdNumbers(mainFrequencies, displayCount, 'asc');
+            const hotStars = getHotColdNumbers(starFrequencies, displayCount, 'desc');
+            const coldStars = getHotColdNumbers(starFrequencies, displayCount, 'asc');
+
+            displayAnalysisResults(hotMain, coldMain, hotStars, coldStars);
+        }
+
+        // --- Event Listeners ---
+        generateButton.addEventListener('click', generateAndDisplayUniqueCombination);
+        analyzeTrendsButton.addEventListener('click', handleAnalyzeTrends);
+        window.addEventListener('load', loadPastDraws);
+    </script>
+</body>
+</html>
