@@ -3,163 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateur & Analyseur EuroMillions (Détaillé)</title>
+    <title>Générateur & Analyseur EuroMillions (Avancé+)</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 20px 0;
-            background-color: #f0f8ff;
-            color: #333;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-        .main-container, .analysis-container {
-            background-color: #ffffff;
-            padding: 20px 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 750px; /* Un peu plus large pour le graphique */
-            width: 95%;
-            margin-bottom: 25px;
-        }
+        /* ... (CSS comme avant, avec potentiellement quelques ajustements mineurs) ... */
+        body {font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;display: flex;flex-direction: column;align-items: center;margin: 20px 0;background-color: #f0f8ff;color: #333;padding: 10px;box-sizing: border-box;}
+        .main-container, .analysis-container, .target-mean-container {background-color: #ffffff;padding: 20px 30px;border-radius: 10px;box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);text-align: center;max-width: 750px;width: 95%;margin-bottom: 25px;}
         h1 { color: #003399; margin-bottom: 15px; font-size: 1.8em; }
         h2 { color: #003399; margin-bottom: 10px; font-size: 1.5em; }
         h3 { color: #003399; margin-bottom: 10px; font-size: 1.2em; text-align:left; border-bottom: 1px solid #eee; padding-bottom: 5px;}
         p.description {font-size:0.9em; color:#666; margin-bottom: 15px;}
-
-        .options-panel, .analysis-options {
-            background-color: #e9eff5;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .options-panel h4, .analysis-options h4 { /* Changé de h3 à h4 pour hiérarchie */
-            margin-top: 0;
-            margin-bottom: 10px;
-            color: #003399;
-            font-size: 1.1em;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-        }
-        .options-panel label, .analysis-options label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.95em;
-            cursor: pointer;
-        }
-        .options-panel input[type="checkbox"], .analysis-options input[type="number"] {
-            margin-right: 8px;
-            vertical-align: middle;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .analysis-options input[type="number"] { width: 60px; text-align: center; }
-
-        button {
-            background-color: #ffd700; color: #003399; border: none;
-            padding: 12px 25px; font-size: 1.1em; font-weight: bold;
-            border-radius: 5px; cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            width: 100%; max-width: 300px;
-        }
+        .options-panel, .analysis-options, .target-mean-options {background-color: #e9eff5;padding: 15px;border-radius: 8px;margin-bottom: 20px;text-align: left;}
+        .options-panel h4, .analysis-options h4, .target-mean-options h4 {margin-top: 0;margin-bottom: 10px;color: #003399;font-size: 1.1em;border-bottom: 1px solid #ccc;padding-bottom: 5px;}
+        .options-panel label, .analysis-options label, .target-mean-options label {display: block;margin-bottom: 8px;font-size: 0.95em;cursor: pointer;}
+        .options-panel input[type="checkbox"], .analysis-options input[type="number"], .target-mean-options input[type="number"] {margin-right: 8px;vertical-align: middle;padding: 5px;border: 1px solid #ccc;border-radius: 4px;}
+        .analysis-options input[type="number"], .target-mean-options input[type="number"] { width: 60px; text-align: center; }
+        button {background-color: #ffd700;color: #003399;border: none;padding: 12px 25px;font-size: 1.1em;font-weight: bold;border-radius: 5px;cursor: pointer;transition: background-color 0.3s ease, transform 0.1s ease;margin-bottom: 15px;box-shadow: 0 2px 5px rgba(0,0,0,0.2);width: 100%;max-width: 300px;}
         button.secondary-action { background-color: #0056b3; color: white; }
         button.secondary-action:hover { background-color: #003399; }
         button:hover { background-color: #f0c400; }
         button:active { transform: scale(0.98); }
         button:disabled { background-color: #ccc; cursor: not-allowed; color: #666;}
-
         .numbers-display { margin-top: 5px; }
         .generated-number-group { margin-bottom: 10px; }
         .generated-number-group h4 { font-size: 1.2em; color: #555; margin-bottom: 8px; text-align:left; }
         .average-display {font-size: 0.9em; color: #444; margin-top: 5px; text-align: left;}
-
-        .number-ball, .star-ball, .hot-cold-ball {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 40px; height: 40px; border-radius: 50%;
-            margin: 3px; font-size: 1.2em; font-weight: bold; color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: transform 0.2s ease;
-        }
+        .number-ball, .star-ball, .hot-cold-ball {display: inline-flex;align-items: center;justify-content: center;width: 40px;height: 40px;border-radius: 50%;margin: 3px;font-size: 1.2em;font-weight: bold;color: white;box-shadow: 0 2px 4px rgba(0,0,0,0.2);transition: transform 0.2s ease;}
         .number-ball:hover, .star-ball:hover, .hot-cold-ball:hover { transform: scale(1.1); }
         .number-ball { background-color: #003399; }
         .star-ball { background-color: #ffd700; color: #003399; }
-        
         .hot-cold-ball { width: 35px; height: 35px; font-size: 1em; margin: 2px 3px; }
         .hot-ball { background-color: #e60000; }
         .cold-ball { background-color: #007bff; }
         .hot-star { background-color: #ff8c00; }
         .cold-star { background-color: #17a2b8; }
-
-        .placeholder, .error-message, .info-message {
-            font-style: italic; color: #888; display: block; margin: 8px 0; font-size: 0.9em;
-        }
+        .placeholder, .error-message, .info-message {font-style: italic;color: #888;display: block;margin: 8px 0;font-size: 0.9em;}
         .error-message { color: red; font-weight: bold; }
         .info-message { color: green; font-weight: bold;}
         .debug-attempts { font-size: 0.8em; color: #777; margin-top:5px;}
-
         .analysis-section { margin-bottom: 20px; text-align: left; }
         .analysis-section h4 { font-size: 1.1em; color: #333; margin: 10px 0 5px 0;}
         .analysis-list span { margin-right: 5px; font-size: 0.9em; }
         .frequency-note { font-size:0.8em; font-weight:normal; color: #555; }
-        
-        /* Styles pour le graphique des moyennes */
-        .average-graph-container {
-            width: 100%;
-            height: 150px; /* Hauteur fixe pour le graphique */
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            display: flex;
-            align-items: flex-end; /* Aligne les barres en bas */
-            padding: 10px 5px 0 5px; /* Espace pour les barres */
-            box-sizing: border-box;
-            overflow-x: auto; /* Permet le défilement horizontal si trop de barres */
-            margin-top: 10px;
-        }
-        .graph-bar {
-            background-color: #28a745; /* Vert */
-            margin: 0 1px; /* Espacement entre les barres */
-            flex-grow: 1; /* Permet aux barres de prendre de la largeur */
-            min-width: 5px; /* Largeur minimale pour les barres fines */
-            position: relative;
-            cursor: default;
-        }
-        .graph-bar .tooltip {
-            visibility: hidden;
-            width: 60px;
-            background-color: #555;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px 0;
-            position: absolute;
-            z-index: 1;
-            bottom: 105%; /* Au-dessus de la barre */
-            left: 50%;
-            margin-left: -30px; /* Centrer le tooltip */
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.8em;
-        }
-        .graph-bar:hover .tooltip {
-            visibility: visible;
-            opacity: 1;
-        }
+        .average-graph-container {width: 100%;height: 150px;background-color: #f9f9f9;border: 1px solid #ddd;border-radius: 5px;display: flex;align-items: flex-end;padding: 10px 5px 0 5px;box-sizing: border-box;overflow-x: auto;margin-top: 10px;}
+        .graph-bar {background-color: #28a745;margin: 0 1px;flex-grow: 1;min-width: 5px;position: relative;cursor: default;}
+        .graph-bar .tooltip {visibility: hidden;width: 80px; /* Augmenté pour la date */ background-color: #555;color: #fff;text-align: center;border-radius: 6px;padding: 5px 0;position: absolute;z-index: 1;bottom: 105%;left: 50%;margin-left: -40px; /* Ajusté */ opacity: 0;transition: opacity 0.3s;font-size: 0.8em;}
+        .graph-bar:hover .tooltip {visibility: visible;opacity: 1;}
         .quartile-item { margin-bottom: 3px; }
+        .target-mean-results { margin-top: 15px; text-align: left;}
+        .target-mean-options label {display: inline-block; margin-right: 10px;} /* Pour aligner input et bouton */
+        .target-mean-options input[type="number"] {width: 70px;}
 
     </style>
 </head>
 <body>
     <div class="main-container">
+        <!-- ... (Contenu du générateur principal comme avant) ... -->
         <h1>Générateur EuroMillions</h1>
-        <!-- ... (description, options-panel comme avant) ... -->
         <p class="description">Cet outil vous aide à choisir des numéros pour l'EuroMillions en appliquant des filtres. Il ne garantit aucun gain et doit être utilisé pour le divertissement.</p>
         
         <div class="options-panel">
@@ -168,6 +67,7 @@
             <label><input type="checkbox" id="filterAvoidSuites" checked> Éviter les suites de 3+ numéros consécutifs (ex: 7-8-9)</label>
             <label><input type="checkbox" id="filterPairImpair"> Appliquer un équilibre Pairs/Impairs (au moins 2 de chaque type)</label>
             <label><input type="checkbox" id="filterPetitGrand"> Appliquer un équilibre Petits(1-25)/Grands(26-50) (au moins 2 de chaque type)</label>
+            <!-- Commentaire: Ici on pourrait ajouter une case pour "Favoriser Chaud/Froid" -->
         </div>
 
         <button id="generateButton" disabled>🍀 Charger l'historique... 🍀</button>
@@ -178,7 +78,7 @@
             <div class="generated-number-group">
                 <h4>Numéros Principaux Générés :</h4>
                 <div id="mainNumbersContainer"><span class="placeholder">Configurez les options et cliquez sur "Générer".</span></div>
-                <div id="generatedAverageDisplay" class="average-display"></div> <!-- NOUVEAU pour moyenne générée -->
+                <div id="generatedAverageDisplay" class="average-display"></div>
             </div>
             <div class="generated-number-group">
                 <h4>Étoiles Générées :</h4>
@@ -187,7 +87,36 @@
         </div>
     </div>
 
+    <!-- NOUVELLE SECTION : GÉNÉRATION PAR MOYENNE CIBLE -->
+    <div class="target-mean-container">
+        <h2>Génération par Moyenne Cible</h2>
+        <p class="description">Génère 5 numéros principaux dont la moyenne est proche de la cible. Les étoiles sont aléatoires. Les filtres ci-dessus sont aussi appliqués.</p>
+        <div class="target-mean-options">
+            <h4>Options :</h4>
+            <label for="targetMeanInput">Moyenne cible (ex: 25.5) :
+                <input type="number" id="targetMeanInput" value="25.5" step="0.1" min="3" max="48"> 
+                <!-- min/max pour la moyenne des 5 numéros (1+2+3+4+5)/5 = 3 et (46+47+48+49+50)/5 = 48 -->
+            </label>
+            <button id="generateByMeanButton" class="secondary-action" disabled>🎯 Générer par Moyenne</button>
+        </div>
+        <div id="targetMeanAttemptsInfo" class="debug-attempts"></div>
+        <div class="target-mean-results">
+            <!-- Les résultats de la génération par moyenne s'afficheront ici -->
+             <div class="generated-number-group">
+                <h4>Numéros (Moyenne Cible) :</h4>
+                <div id="targetMeanNumbersContainer"><span class="placeholder">Entrez une moyenne et générez.</span></div>
+                <div id="targetMeanAverageDisplay" class="average-display"></div>
+            </div>
+            <div class="generated-number-group">
+                <h4>Étoiles (Aléatoires) :</h4>
+                <div id="targetMeanStarsContainer"><span class="placeholder"></span></div>
+            </div>
+        </div>
+    </div>
+
+
     <div class="analysis-container">
+        <!-- ... (Contenu de l'analyse comme avant) ... -->
         <h2>Analyse des Tendances et Distributions</h2>
         <p class="description">Basé sur les N derniers tirages de votre historique. Pour information seulement, non prédictif.</p>
         <div class="analysis-options">
@@ -203,7 +132,6 @@
         
         <div class="analysis-section" id="hotColdResults">
             <h3>Numéros Chauds/Froids</h3>
-            <!-- Les résultats Chauds/Froids s'afficheront ici -->
         </div>
         
         <div class="analysis-section" id="quartileResults">
@@ -223,10 +151,11 @@
 
     <script>
         // --- DOM Elements ---
+        // ... (comme avant)
         const generateButton = document.getElementById('generateButton');
         const mainNumbersContainer = document.getElementById('mainNumbersContainer');
         const starNumbersContainer = document.getElementById('starNumbersContainer');
-        const generatedAverageDisplay = document.getElementById('generatedAverageDisplay'); // NOUVEAU
+        const generatedAverageDisplay = document.getElementById('generatedAverageDisplay');
         const loadingStatus = document.getElementById('loadingStatus');
         const attemptsInfo = document.getElementById('attemptsInfo');
 
@@ -235,61 +164,52 @@
         const chkPairImpair = document.getElementById('filterPairImpair');
         const chkPetitGrand = document.getElementById('filterPetitGrand');
 
+        // Nouveaux éléments pour la génération par moyenne
+        const targetMeanInput = document.getElementById('targetMeanInput');
+        const generateByMeanButton = document.getElementById('generateByMeanButton');
+        const targetMeanAttemptsInfo = document.getElementById('targetMeanAttemptsInfo');
+        const targetMeanNumbersContainer = document.getElementById('targetMeanNumbersContainer');
+        const targetMeanAverageDisplay = document.getElementById('targetMeanAverageDisplay');
+        const targetMeanStarsContainer = document.getElementById('targetMeanStarsContainer');
+
         const analyzeTrendsButton = document.getElementById('analyzeTrendsButton');
         const analysisWindowInput = document.getElementById('analysisWindow');
         const displayCountInput = document.getElementById('displayCount');
-        const hotColdResultsContainer = document.getElementById('hotColdResults'); // Modifié
-        const quartileDistributionDisplay = document.getElementById('quartileDistributionDisplay'); // NOUVEAU
-        const averageGraphContainer = document.getElementById('averageGraphContainer'); // NOUVEAU
+        const hotColdResultsContainer = document.getElementById('hotColdResults');
+        const quartileDistributionDisplay = document.getElementById('quartileDistributionDisplay');
+        const averageGraphContainer = document.getElementById('averageGraphContainer');
 
 
         // --- Data & State ---
         let pastDrawsData = []; 
+        let hotNumbersList = []; // Pour stocker les numéros chauds pour la génération
+        let coldNumbersList = []; // Pour stocker les numéros froids
 
-        // --- Core Logic Functions (Génération & Analyse) ---
-        // ... (loadPastDraws, generateUniqueSortedNumbers, arraysAreEqual, isCombinationAlreadyDrawn, containsConsecutiveSuite, checkPairImpairEquilibrium, checkPetitGrandEquilibrium sont comme avant)
-        // Les copier-coller depuis la version précédente
+        // --- Core Logic Functions ---
+        // ... (loadPastDraws et les fonctions de vérification de base comme avant) ...
+        // Copier-coller loadPastDraws, generateUniqueSortedNumbers, arraysAreEqual, isCombinationAlreadyDrawn, containsConsecutiveSuite, checkPairImpairEquilibrium, checkPetitGrandEquilibrium de la version précédente.
+        // Assurez-vous que loadPastDraws active aussi generateByMeanButton.
 
-        async function loadPastDraws() {
+        async function loadPastDraws() { /* ... comme dans la version précédente ... */ 
             try {
                 const response = await fetch('past_draws.json');
                 if (!response.ok) throw new Error(`HTTP ${response.status} en chargeant 'past_draws.json'. Assurez-vous que le fichier est présent, au bon format, et que les plus récents sont en premier.`);
-                
                 const data = await response.json();
                 if (!Array.isArray(data)) throw new Error("'past_draws.json' doit contenir une liste (array) de tirages.");
-
                 pastDrawsData = data.map(draw => {
-                    if (!draw.numeros || !draw.etoiles || !Array.isArray(draw.numeros) || !Array.isArray(draw.etoiles) || draw.numeros.length !== 5 || draw.etoiles.length !== 2) {
-                        console.warn("Tirage au format invalide ignoré:", draw);
-                        return null;
-                    }
-                    // S'assurer que les numéros sont bien des nombres
+                    if (!draw.numeros || !draw.etoiles || !Array.isArray(draw.numeros) || !Array.isArray(draw.etoiles) || draw.numeros.length !== 5 || draw.etoiles.length !== 2) {console.warn("Tirage au format invalide ignoré:", draw);return null;}
                     const numeros = draw.numeros.map(n => parseInt(n)).filter(n => !isNaN(n));
                     const etoiles = draw.etoiles.map(e => parseInt(e)).filter(e => !isNaN(e));
-
-                    if (numeros.length !== 5 || etoiles.length !== 2) {
-                        console.warn("Tirage avec un nombre incorrect de numéros/étoiles après conversion:", draw);
-                        return null;
-                    }
-
-                    return {
-                        date: draw.date || null,
-                        numeros: numeros.sort((a, b) => a - b),
-                        etoiles: etoiles.sort((a, b) => a - b)
-                    };
+                    if (numeros.length !== 5 || etoiles.length !== 2) {console.warn("Tirage avec un nombre incorrect de numéros/étoiles après conversion:", draw);return null;}
+                    return {date: draw.date || null,numeros: numeros.sort((a, b) => a - b),etoiles: etoiles.sort((a, b) => a - b)};
                 }).filter(d => d !== null);
-
-                if (pastDrawsData.length === 0 && data.length > 0) {
-                     throw new Error("Aucun tirage valide trouvé dans l'historique après filtrage. Vérifiez le format des numéros/étoiles (doivent être des nombres).");
-                }
-                 if (pastDrawsData.length === 0 && data.length === 0) {
-                     loadingStatus.textContent = `L'historique 'past_draws.json' est vide. Certaines fonctionnalités seront limitées.`;
-                } else {
-                    loadingStatus.textContent = `Historique de ${pastDrawsData.length} tirages chargé avec succès.`;
-                }
+                if (pastDrawsData.length === 0 && data.length > 0) {throw new Error("Aucun tirage valide trouvé dans l'historique après filtrage. Vérifiez le format des numéros/étoiles (doivent être des nombres).");}
+                if (pastDrawsData.length === 0 && data.length === 0) {loadingStatus.textContent = `L'historique 'past_draws.json' est vide. Certaines fonctionnalités seront limitées.`;}
+                else {loadingStatus.textContent = `Historique de ${pastDrawsData.length} tirages chargé avec succès.`;}
                 loadingStatus.className = 'info-message';
                 generateButton.disabled = false;
                 analyzeTrendsButton.disabled = false;
+                generateByMeanButton.disabled = false; // Activer ce bouton aussi
                 generateButton.textContent = '🍀 Générer mes Numéros 🍀';
             } catch (error) {
                 console.error("Erreur lors du chargement de l'historique:", error);
@@ -298,160 +218,170 @@
                 mainNumbersContainer.innerHTML = `<span class="error-message">Vérifiez la console (F12) et le fichier <code>past_draws.json</code>.</span>`;
             }
         }
-        
-        // ... (Coller ici les autres fonctions de base : generateUniqueSortedNumbers, arraysAreEqual, isCombinationAlreadyDrawn, containsConsecutiveSuite, checkPairImpairEquilibrium, checkPetitGrandEquilibrium)
-
         function generateUniqueSortedNumbers(count, min, max) {const numbers = new Set();while (numbers.size < count) numbers.add(Math.floor(Math.random() * (max - min + 1)) + min);return Array.from(numbers).sort((a, b) => a - b);}
         function arraysAreEqual(arr1, arr2) {if (arr1.length !== arr2.length) return false;for (let i = 0; i < arr1.length; i++) if (arr1[i] !== arr2[i]) return false;return true;}
         function isCombinationAlreadyDrawn(mainNums, starNums, history) {for (const pastDraw of history) {if (arraysAreEqual(mainNums, pastDraw.numeros) && arraysAreEqual(starNums, pastDraw.etoiles)) return true;}return false;}
         function containsConsecutiveSuite(numbersArray, minSuiteLength = 3) {if (numbersArray.length < minSuiteLength) return false;for (let i = 0; i <= numbersArray.length - minSuiteLength; i++) {let isSuite = true;for (let j = 0; j < minSuiteLength - 1; j++) {if (numbersArray[i + j + 1] !== numbersArray[i + j] + 1) { isSuite = false; break; }}if (isSuite) return true;}return false;}
         function checkPairImpairEquilibrium(numbers, minEachType = 2) {let e = 0, o = 0; numbers.forEach(n => (n % 2 === 0) ? e++ : o++); return e >= minEachType && o >= minEachType;}
         function checkPetitGrandEquilibrium(numbers, minEachType = 2, splitPoint = 25) {let p = 0, g = 0; numbers.forEach(n => (n <= splitPoint) ? p++ : g++); return p >= minEachType && g >= minEachType;}
-
-
-        async function generateAndDisplayUniqueCombination() {
-            // ... (logique de la fonction comme avant) ...
-            // À la fin, après avoir affiché les numéros :
-            if (chkAvoidHistory.checked && pastDrawsData.length === 0 && !generateButton.disabled) {
-                loadingStatus.textContent = "L'historique n'est pas chargé mais l'option 'Éviter combinaisons sorties' est cochée. Décochez-la ou rechargez la page avec un historique valide.";
-                loadingStatus.className = 'error-message';
-                return;
-            }
-            
-            generateButton.disabled = true;
-            mainNumbersContainer.innerHTML = '<span class="placeholder">Recherche d\'une combinaison selon vos critères...</span>';
-            starNumbersContainer.innerHTML = '';
-            generatedAverageDisplay.innerHTML = ''; // Réinitialiser
-            attemptsInfo.textContent = '';
-
+        
+        // ... (generateAndDisplayUniqueCombination comme avant, y compris le calcul de moyenne) ...
+        async function generateAndDisplayUniqueCombination() { /* ... comme avant ... */
+            if (chkAvoidHistory.checked && pastDrawsData.length === 0 && !generateButton.disabled) {loadingStatus.textContent = "L'historique n'est pas chargé mais l'option 'Éviter combinaisons sorties' est cochée...";loadingStatus.className = 'error-message';return;}
+            generateButton.disabled = true;mainNumbersContainer.innerHTML = '<span class="placeholder">Recherche...</span>';starNumbersContainer.innerHTML = '';generatedAverageDisplay.innerHTML = '';attemptsInfo.textContent = '';
             await new Promise(resolve => setTimeout(resolve, 10));
-
-            let mainNumbers, starNumbers;
-            let isValidCombination = false;
-            let attempts = 0;
-            const maxAttempts = 75000; 
-
+            let mainNumbers, starNumbers;let isValidCombination = false;let attempts = 0;const maxAttempts = 75000; 
             do {
                 mainNumbers = generateUniqueSortedNumbers(5, 1, 50);
                 starNumbers = generateUniqueSortedNumbers(2, 1, 12);
-                attempts++;
-                let isRejectedByFilter = false;
-
+                attempts++;let isRejectedByFilter = false;
                 if (chkAvoidHistory.checked && pastDrawsData.length > 0 && isCombinationAlreadyDrawn(mainNumbers, starNumbers, pastDrawsData)) isRejectedByFilter = true;
                 if (!isRejectedByFilter && chkAvoidSuites.checked && containsConsecutiveSuite(mainNumbers, 3)) isRejectedByFilter = true;
                 if (!isRejectedByFilter && chkPairImpair.checked && !checkPairImpairEquilibrium(mainNumbers, 2)) isRejectedByFilter = true;
                 if (!isRejectedByFilter && chkPetitGrand.checked && !checkPetitGrandEquilibrium(mainNumbers, 2, 25)) isRejectedByFilter = true;
+                // COMMENTAIRE : Ici on pourrait ajouter la logique pour favoriser chaud/froid si une case est cochée.
+                // Cela impliquerait de vérifier si mainNumbers contient assez de numéros de hotNumbersList
+                // et pas trop de coldNumbersList. Si ce n'est pas le cas, isRejectedByFilter = true;
                 if (!isRejectedByFilter) isValidCombination = true;
-
-                if (attempts >= maxAttempts) {
-                    mainNumbersContainer.innerHTML = '<span class="error-message">Trop de tentatives pour trouver une combinaison valide. Essayez des filtres moins restrictifs.</span>';
-                    starNumbersContainer.innerHTML = '';
-                    attemptsInfo.textContent = `Nombre maximum de ${maxAttempts} tentatives atteintes.`;
-                    generateButton.disabled = false; return;
-                }
+                if (attempts >= maxAttempts) {mainNumbersContainer.innerHTML = '<span class="error-message">Trop de tentatives...</span>';starNumbersContainer.innerHTML = '';attemptsInfo.textContent = `Max ${maxAttempts} tentatives.`;generateButton.disabled = false; return;}
             } while (!isValidCombination);
-            
-            attemptsInfo.textContent = `Combinaison valide trouvée après ${attempts} tentative(s).`;
-            mainNumbersContainer.innerHTML = '';
-            mainNumbers.forEach(n => mainNumbersContainer.innerHTML += `<span class="number-ball">${n}</span>`);
-            starNumbersContainer.innerHTML = '';
-            starNumbers.forEach(s => starNumbersContainer.innerHTML += `<span class="star-ball">${s}</span>`);
-            
-            // Calcul et affichage de la moyenne des numéros générés
-            const sumGenerated = mainNumbers.reduce((acc, num) => acc + num, 0);
-            const avgGenerated = sumGenerated / mainNumbers.length;
+            attemptsInfo.textContent = `Combinaison trouvée après ${attempts} tentative(s).`;
+            mainNumbersContainer.innerHTML = '';mainNumbers.forEach(n => mainNumbersContainer.innerHTML += `<span class="number-ball">${n}</span>`);
+            starNumbersContainer.innerHTML = '';starNumbers.forEach(s => starNumbersContainer.innerHTML += `<span class="star-ball">${s}</span>`);
+            const sumGenerated = mainNumbers.reduce((acc, num) => acc + num, 0);const avgGenerated = sumGenerated / mainNumbers.length;
             generatedAverageDisplay.innerHTML = `Moyenne des numéros principaux générés : <strong>${avgGenerated.toFixed(1)}</strong>`;
-
             generateButton.disabled = false;
         }
 
+        // NOUVELLE FONCTION : Génération par Moyenne Cible
+        async function generateByTargetMean() {
+            if (chkAvoidHistory.checked && pastDrawsData.length === 0 && !generateButton.disabled) {
+                targetMeanNumbersContainer.innerHTML = "<span class='error-message'>Historique non chargé pour le filtre.</span>"; return;
+            }
+            const targetMean = parseFloat(targetMeanInput.value);
+            if (isNaN(targetMean) || targetMean < 3 || targetMean > 48) {
+                targetMeanNumbersContainer.innerHTML = "<span class='error-message'>Moyenne cible invalide (doit être entre 3 et 48).</span>"; return;
+            }
 
-        function calculateFrequencies(draws, type) { /* ... comme avant ... */ 
-            const frequencies = {};
-            const maxNum = (type === 'numeros') ? 50 : 12;
-            for (let i = 1; i <= maxNum; i++) frequencies[i] = 0;
-            draws.forEach(draw => {
-                if (draw && draw[type]) {
-                    draw[type].forEach(num => {
-                        if (frequencies.hasOwnProperty(num)) frequencies[num]++;
-                        // else console.warn(`Numéro ${num} inattendu dans ${type}, ignoré.`); // Peut être bruyant
-                    });
+            generateByMeanButton.disabled = true;
+            targetMeanNumbersContainer.innerHTML = '<span class="placeholder">Recherche par moyenne cible...</span>';
+            targetMeanStarsContainer.innerHTML = '';
+            targetMeanAverageDisplay.innerHTML = '';
+            targetMeanAttemptsInfo.textContent = '';
+            await new Promise(resolve => setTimeout(resolve, 10));
+
+            let mainNumbers;
+            let starNumbers = generateUniqueSortedNumbers(2, 1, 12); // Étoiles toujours aléatoires
+            let isValidCombination = false;
+            let attempts = 0;
+            const maxAttemptsMean = 150000; // Peut nécessiter BEAUCOUP plus d'essais
+            const targetSum = targetMean * 5;
+            const tolerance = 0.5 * 5; // Tolérance pour la somme totale (ex: +/- 2.5 pour une tolérance de +/- 0.5 sur la moyenne)
+
+            do {
+                attempts++;
+                let tempNumbers = new Set();
+                // Générer 4 numéros
+                while(tempNumbers.size < 4) {
+                    tempNumbers.add(Math.floor(Math.random() * 50) + 1);
                 }
-            });
-            return frequencies;
-        }
-        function getHotColdNumbers(frequencies, count, sortOrder = 'desc') { /* ... comme avant ... */ 
-            return Object.entries(frequencies)
-                .sort((a, b) => {
-                    const freqDiff = sortOrder === 'desc' ? b[1] - a[1] : a[1] - b[1];
-                    return freqDiff !== 0 ? freqDiff : parseInt(a[0]) - parseInt(b[0]);
-                })
-                .slice(0, count)
-                .map(entry => ({ num: parseInt(entry[0]), freq: entry[1] }));
-        }
+                const firstFour = Array.from(tempNumbers);
+                const sumFirstFour = firstFour.reduce((a, b) => a + b, 0);
+                
+                // Calculer le 5ème numéro théorique
+                const fifthNumTheory = targetSum - sumFirstFour;
 
-        // NOUVELLE FONCTION pour la distribution par quartiles
-        function calculateQuartileDistribution(draws) {
-            const quartiles = { q1: 0, q2: 0, q3: 0, q4: 0 }; // 1-12, 13-25, 26-38, 39-50
-            draws.forEach(draw => {
-                if (draw && draw.numeros) {
-                    draw.numeros.forEach(num => {
-                        if (num >= 1 && num <= 12) quartiles.q1++;
-                        else if (num >= 13 && num <= 25) quartiles.q2++;
-                        else if (num >= 26 && num <= 38) quartiles.q3++;
-                        else if (num >= 39 && num <= 50) quartiles.q4++;
-                    });
+                // Trouver un 5ème numéro réel proche et valide
+                let fifthNum = -1;
+                for (let offset = 0; offset <= Math.ceil(tolerance / 2); offset++) { // Cherche autour du 5e théorique
+                    let potentialFifth1 = Math.round(fifthNumTheory + offset);
+                    let potentialFifth2 = Math.round(fifthNumTheory - offset);
+
+                    if (potentialFifth1 >= 1 && potentialFifth1 <= 50 && !firstFour.includes(potentialFifth1)) {
+                        fifthNum = potentialFifth1; break;
+                    }
+                    if (potentialFifth2 >= 1 && potentialFifth2 <= 50 && !firstFour.includes(potentialFifth2) && offset !== 0) {
+                        fifthNum = potentialFifth2; break;
+                    }
                 }
-            });
-            return quartiles;
-        }
-        
-        // NOUVELLE FONCTION pour calculer les moyennes des tirages passés
-        function calculatePastAverages(draws) {
-            return draws.map(draw => {
-                if (draw && draw.numeros && draw.numeros.length > 0) {
-                    const sum = draw.numeros.reduce((acc, num) => acc + num, 0);
-                    return sum / draw.numeros.length;
+
+                if (fifthNum === -1) { // Pas trouvé de 5e numéro valide proche
+                    if (attempts >= maxAttemptsMean) break;
+                    continue;
                 }
-                return null; // Au cas où un tirage serait invalide
-            }).filter(avg => avg !== null);
+                
+                mainNumbers = [...firstFour, fifthNum].sort((a,b) => a-b);
+                const currentSum = mainNumbers.reduce((a,b) => a+b, 0);
+
+                // Vérifier si la somme est dans la tolérance
+                if (Math.abs(currentSum - targetSum) > tolerance) {
+                     if (attempts >= maxAttemptsMean) break;
+                     continue;
+                }
+
+                // Appliquer les filtres
+                let isRejectedByFilter = false;
+                if (chkAvoidHistory.checked && pastDrawsData.length > 0 && isCombinationAlreadyDrawn(mainNumbers, starNumbers, pastDrawsData)) isRejectedByFilter = true;
+                if (!isRejectedByFilter && chkAvoidSuites.checked && containsConsecutiveSuite(mainNumbers, 3)) isRejectedByFilter = true;
+                if (!isRejectedByFilter && chkPairImpair.checked && !checkPairImpairEquilibrium(mainNumbers, 2)) isRejectedByFilter = true;
+                if (!isRejectedByFilter && chkPetitGrand.checked && !checkPetitGrandEquilibrium(mainNumbers, 2, 25)) isRejectedByFilter = true;
+                
+                if (!isRejectedByFilter) isValidCombination = true;
+
+                if (attempts >= maxAttemptsMean) break;
+
+            } while (!isValidCombination);
+
+            if (isValidCombination) {
+                targetMeanAttemptsInfo.textContent = `Combinaison (moy. cible) trouvée après ${attempts} tentative(s).`;
+                targetMeanNumbersContainer.innerHTML = '';
+                mainNumbers.forEach(n => targetMeanNumbersContainer.innerHTML += `<span class="number-ball">${n}</span>`);
+                targetMeanStarsContainer.innerHTML = '';
+                starNumbers.forEach(s => targetMeanStarsContainer.innerHTML += `<span class="star-ball">${s}</span>`);
+                const sumGenerated = mainNumbers.reduce((acc, num) => acc + num, 0);
+                const avgGenerated = sumGenerated / mainNumbers.length;
+                targetMeanAverageDisplay.innerHTML = `Moyenne réelle : <strong>${avgGenerated.toFixed(1)}</strong> (Cible: ${targetMean.toFixed(1)})`;
+            } else {
+                targetMeanNumbersContainer.innerHTML = '<span class="error-message">Trop de tentatives pour la moyenne cible avec les filtres actuels. Essayez d\'autres valeurs ou filtres.</span>';
+                targetMeanAverageDisplay.innerHTML = '';
+                targetMeanStarsContainer.innerHTML = '';
+                targetMeanAttemptsInfo.textContent = `Max ${maxAttemptsMean} tentatives.`;
+            }
+            generateByMeanButton.disabled = false;
         }
 
-        function displayAnalysis(data) { // Renommé et étendu
-            hotColdResultsContainer.innerHTML = `
-                <h3>Numéros Chauds/Froids</h3>
-                <div class="analysis-section"><h4>Numéros Principaux Chauds <span class="frequency-note">(plus fréquents)</span>:</h4>
-                     <div class="analysis-list">${data.hotMain.map(item => `<span class="hot-cold-ball hot-ball" title="Sorti ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div>
-                <div class="analysis-section"><h4>Numéros Principaux Froids <span class="frequency-note">(moins fréquents)</span>:</h4>
-                     <div class="analysis-list">${data.coldMain.map(item => `<span class="hot-cold-ball cold-ball" title="Sorti ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div>
-                <div class="analysis-section"><h4>Étoiles Chaudes <span class="frequency-note">(plus fréquentes)</span>:</h4>
-                     <div class="analysis-list">${data.hotStars.map(item => `<span class="hot-cold-ball hot-star" title="Sortie ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div>
-                <div class="analysis-section"><h4>Étoiles Froides <span class="frequency-note">(moins fréquentes)</span>:</h4>
-                     <div class="analysis-list">${data.coldStars.map(item => `<span class="hot-cold-ball cold-star" title="Sortie ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div>
-            `;
 
-            quartileDistributionDisplay.innerHTML = `
-                <div class="quartile-item"><strong>Q1 (1-12):</strong> ${data.quartiles.q1} numéros</div>
-                <div class="quartile-item"><strong>Q2 (13-25):</strong> ${data.quartiles.q2} numéros</div>
-                <div class="quartile-item"><strong>Q3 (26-38):</strong> ${data.quartiles.q3} numéros</div>
-                <div class="quartile-item"><strong>Q4 (39-50):</strong> ${data.quartiles.q4} numéros</div>
-            `;
+        // --- Fonctions d'Analyse ---
+        // ... (calculateFrequencies, getHotColdNumbers, calculateQuartileDistribution, calculatePastAverages sont comme avant) ...
+        // Les copier-coller depuis la version précédente
+
+        function calculateFrequencies(draws, type) {const frequencies = {};const maxNum = (type === 'numeros') ? 50 : 12;for (let i = 1; i <= maxNum; i++) frequencies[i] = 0;draws.forEach(draw => {if (draw && draw[type]) {draw[type].forEach(num => {if (frequencies.hasOwnProperty(num)) frequencies[num]++;});}});return frequencies;}
+        function getHotColdNumbers(frequencies, count, sortOrder = 'desc') {return Object.entries(frequencies).sort((a, b) => {const freqDiff = sortOrder === 'desc' ? b[1] - a[1] : a[1] - b[1];return freqDiff !== 0 ? freqDiff : parseInt(a[0]) - parseInt(b[0]);}).slice(0, count).map(entry => ({ num: parseInt(entry[0]), freq: entry[1] }));}
+        function calculateQuartileDistribution(draws) {const quartiles = { q1: 0, q2: 0, q3: 0, q4: 0 };draws.forEach(draw => {if (draw && draw.numeros) {draw.numeros.forEach(num => {if (num >= 1 && num <= 12) quartiles.q1++;else if (num >= 13 && num <= 25) quartiles.q2++;else if (num >= 26 && num <= 38) quartiles.q3++;else if (num >= 39 && num <= 50) quartiles.q4++;});}});return quartiles;}
+        function calculatePastAverages(draws) {return draws.map(draw => {if (draw && draw.numeros && draw.numeros.length > 0) {const sum = draw.numeros.reduce((acc, num) => acc + num, 0);return {avg: sum / draw.numeros.length, date: draw.date || 'N/A'};}return null;}).filter(item => item !== null);}
+
+
+        function displayAnalysis(data) {
+            // ... (Partie Chaud/Froid et Quartiles comme avant) ...
+            hotColdResultsContainer.innerHTML = `<h3>Numéros Chauds/Froids</h3><div class="analysis-section"><h4>Numéros Principaux Chauds <span class="frequency-note">(plus fréquents)</span>:</h4><div class="analysis-list">${data.hotMain.map(item => `<span class="hot-cold-ball hot-ball" title="Sorti ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div><div class="analysis-section"><h4>Numéros Principaux Froids <span class="frequency-note">(moins fréquents)</span>:</h4><div class="analysis-list">${data.coldMain.map(item => `<span class="hot-cold-ball cold-ball" title="Sorti ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div><div class="analysis-section"><h4>Étoiles Chaudes <span class="frequency-note">(plus fréquentes)</span>:</h4><div class="analysis-list">${data.hotStars.map(item => `<span class="hot-cold-ball hot-star" title="Sortie ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div><div class="analysis-section"><h4>Étoiles Froides <span class="frequency-note">(moins fréquentes)</span>:</h4><div class="analysis-list">${data.coldStars.map(item => `<span class="hot-cold-ball cold-star" title="Sortie ${item.freq} fois">${item.num}</span>`).join('') || '<span class="placeholder">N/A</span>'}</div></div>`;
+            quartileDistributionDisplay.innerHTML = `<div class="quartile-item"><strong>Q1 (1-12):</strong> ${data.quartiles.q1} numéros</div><div class="quartile-item"><strong>Q2 (13-25):</strong> ${data.quartiles.q2} numéros</div><div class="quartile-item"><strong>Q3 (26-38):</strong> ${data.quartiles.q3} numéros</div><div class="quartile-item"><strong>Q4 (39-50):</strong> ${data.quartiles.q4} numéros</div>`;
             
-            // Affichage du graphique des moyennes
-            averageGraphContainer.innerHTML = ''; // Vider le graphique précédent
-            if (data.pastAverages.length > 0) {
-                const maxAvg = Math.max(...data.pastAverages, 25); // 25 est une moyenne "normale" pour l'échelle
-                const graphHeight = 120; // Hauteur en pixels pour la barre la plus haute
+            // Graphique des moyennes avec dates dans tooltip
+            averageGraphContainer.innerHTML = '';
+            if (data.pastAveragesAndDates.length > 0) {
+                const averagesOnly = data.pastAveragesAndDates.map(item => item.avg);
+                const maxAvg = Math.max(...averagesOnly, 25); 
+                const graphHeight = 120; 
 
-                data.pastAverages.forEach(avg => {
+                data.pastAveragesAndDates.slice(0, 20).reverse().forEach(item => { // Afficher les ~20 plus récents, du plus ancien au plus récent
                     const bar = document.createElement('div');
                     bar.classList.add('graph-bar');
-                    const barHeight = (avg / maxAvg) * graphHeight;
-                    bar.style.height = `${Math.max(barHeight, 1)}px`; // Hauteur min 1px
+                    const barHeight = (item.avg / maxAvg) * graphHeight;
+                    bar.style.height = `${Math.max(barHeight, 1)}px`;
                     
                     const tooltip = document.createElement('span');
                     tooltip.classList.add('tooltip');
-                    tooltip.textContent = avg.toFixed(1);
+                    tooltip.textContent = `${item.date}: ${item.avg.toFixed(1)}`; // Date + Moyenne
                     bar.appendChild(tooltip);
 
                     averageGraphContainer.appendChild(bar);
@@ -462,39 +392,23 @@
         }
 
         function handleAnalyzeTrends() {
-            if (pastDrawsData.length === 0) {
-                hotColdResultsContainer.innerHTML = '<span class="error-message">Historique non chargé ou vide.</span>';
-                quartileDistributionDisplay.innerHTML = '<span class="error-message">Historique non chargé ou vide.</span>';
-                averageGraphContainer.innerHTML = '<span class="error-message">Historique non chargé ou vide.</span>';
-                return;
-            }
-
-            const windowSize = parseInt(analysisWindowInput.value);
-            const displayCount = parseInt(displayCountInput.value);
-
-            if (isNaN(windowSize) || windowSize < 1 || isNaN(displayCount) || displayCount < 1) {
-                hotColdResultsContainer.innerHTML = '<span class="error-message">Valeurs numériques invalides pour l\'analyse.</span>';
-                return;
-            }
-
-            const actualWindowSize = Math.min(windowSize, pastDrawsData.length);
-            const drawsToAnalyze = pastDrawsData.slice(0, actualWindowSize); 
-
-            if (drawsToAnalyze.length === 0) {
-                 hotColdResultsContainer.innerHTML = '<span class="info-message">Pas assez de données pour cette fenêtre.</span>';
-                 quartileDistributionDisplay.innerHTML = '<span class="info-message">Pas assez de données.</span>';
-                 averageGraphContainer.innerHTML = '<span class="info-message">Pas de données.</span>';
-                return;
-            }
-            hotColdResultsContainer.innerHTML = `<span class="placeholder">Analyse des ${actualWindowSize} tirages...</span>`;
-            quartileDistributionDisplay.innerHTML = `<span class="placeholder">Calcul en cours...</span>`;
-            averageGraphContainer.innerHTML = `<span class="placeholder">Génération du graphique...</span>`;
+            // ... (Début comme avant : vérifications, drawsToAnalyze) ...
+            if (pastDrawsData.length === 0) {hotColdResultsContainer.innerHTML = '<span class="error-message">Historique non chargé.</span>';quartileDistributionDisplay.innerHTML = '<span class="error-message">Historique non chargé.</span>';averageGraphContainer.innerHTML = '<span class="error-message">Historique non chargé.</span>';return;}
+            const windowSize = parseInt(analysisWindowInput.value);const displayCount = parseInt(displayCountInput.value);
+            if (isNaN(windowSize) || windowSize < 1 || isNaN(displayCount) || displayCount < 1) {hotColdResultsContainer.innerHTML = '<span class="error-message">Valeurs invalides.</span>';return;}
+            const actualWindowSize = Math.min(windowSize, pastDrawsData.length);const drawsToAnalyze = pastDrawsData.slice(0, actualWindowSize); 
+            if (drawsToAnalyze.length === 0) {hotColdResultsContainer.innerHTML = '<span class="info-message">Pas assez de données.</span>';quartileDistributionDisplay.innerHTML = '<span class="info-message">Pas de données.</span>';averageGraphContainer.innerHTML = '<span class="info-message">Pas de données.</span>';return;}
+            hotColdResultsContainer.innerHTML = `<span class="placeholder">Analyse des ${actualWindowSize} tirages...</span>`;quartileDistributionDisplay.innerHTML = `<span class="placeholder">Calcul...</span>`;averageGraphContainer.innerHTML = `<span class="placeholder">Génération graphique...</span>`;
 
             const mainFrequencies = calculateFrequencies(drawsToAnalyze, 'numeros');
             const starFrequencies = calculateFrequencies(drawsToAnalyze, 'etoiles');
             const quartiles = calculateQuartileDistribution(drawsToAnalyze);
-            const pastAverages = calculatePastAverages(drawsToAnalyze);
+            const pastAveragesAndDates = calculatePastAverages(drawsToAnalyze); // Renommé pour clarté
 
+            // Stocker les listes chaud/froid pour la génération (si on implémente le point 3 plus tard)
+            // On pourrait prendre plus que 'displayCount' pour avoir un pool plus large
+            hotNumbersList = getHotColdNumbers(mainFrequencies, Math.max(displayCount, 10), 'desc').map(item => item.num);
+            coldNumbersList = getHotColdNumbers(mainFrequencies, Math.max(displayCount, 10), 'asc').map(item => item.num);
 
             displayAnalysis({
                 hotMain: getHotColdNumbers(mainFrequencies, displayCount, 'desc'),
@@ -502,14 +416,17 @@
                 hotStars: getHotColdNumbers(starFrequencies, displayCount, 'desc'),
                 coldStars: getHotColdNumbers(starFrequencies, displayCount, 'asc'),
                 quartiles: quartiles,
-                pastAverages: pastAverages
+                pastAveragesAndDates: pastAveragesAndDates // Passer le tableau avec dates
             });
         }
 
         // --- Event Listeners ---
+        // ... (comme avant, plus le nouveau bouton)
         generateButton.addEventListener('click', generateAndDisplayUniqueCombination);
+        generateByMeanButton.addEventListener('click', generateByTargetMean); // NOUVEAU
         analyzeTrendsButton.addEventListener('click', handleAnalyzeTrends);
         window.addEventListener('load', loadPastDraws);
+
     </script>
 </body>
 </html>
