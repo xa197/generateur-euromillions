@@ -28,7 +28,7 @@
         .generated-number-group { margin-bottom: 10px; }
         .generated-number-group h4, .decade-group h4 { font-size: 1.1em; color: #555; margin-bottom: 8px; text-align:left; border-top: 1px solid #f0f0f0; padding-top: 10px; margin-top: 10px;}
         .average-display {font-size: 0.9em; color: #444; margin-top: 5px; text-align: left;}
-        .number-ball, .star-ball, .hot-cold-ball {display: inline-flex;align-items: center;justify-content: center;width: 40px;height: 40px;border-radius: 50%;margin: 3px;font-size: 1.2em;font-weight: bold;color: white;box-shadow: 0 2px 4px rgba(0,0,0,0.2);transition: transform 0.2s ease;}
+        .number-ball, .star-ball, .hot-cold-ball {display: inline-flex;align-items: center;justify-content: center;width: 40px;height: 40px;border-radius: 50%;margin: 3px;font-size: 1.2em;font-weight: bold;color: white;box-shadow: 0 2px 4px rgba(0,0,0,0.2);transition: transform 0.2s ease; cursor: default;}
         .number-ball:hover, .star-ball:hover, .hot-cold-ball:hover { transform: scale(1.1); }
         .number-ball { background-color: #003399; }
         .star-ball { background-color: #ffd700; color: #003399; }
@@ -105,7 +105,6 @@
         <button id="analyzeTrendsButton" class="secondary-action" disabled>📊 Analyser</button>
         <div class="analysis-section" id="hotColdResults"><h3>Numéros Chauds/Froids</h3></div>
         <div class="analysis-section" id="quartileResults"><h3>Distribution par Quartiles (Numéros Principaux)</h3><div id="quartileDistributionDisplay"><span class="placeholder">Cliquez sur "Analyser".</span></div></div>
-        <!-- NOUVEAU: Section pour l'analyse par dizaine -->
         <div class="analysis-section" id="decadeAnalysisResults">
             <h3>Derniers Numéros Sortis par Dizaine</h3>
             <div id="decadeDisplay"><span class="placeholder">Cliquez sur "Analyser".</span></div>
@@ -116,7 +115,6 @@
         </div>
     </div>
     
-    <!-- NOUVEAU: Section pour ajouter un tirage -->
     <div class="add-draw-container">
         <h2>Ajouter un nouveau tirage</h2>
         <p class="description">Les tirages ajoutés ici sont sauvegardés localement sur votre navigateur et fusionnés avec l'historique principal au rechargement de la page.</p>
@@ -149,7 +147,6 @@
 
 
     <script>
-        // --- DOM Elements ---
         const generateButton = document.getElementById('generateButton');
         const mainNumbersContainer = document.getElementById('mainNumbersContainer');
         const starNumbersContainer = document.getElementById('starNumbersContainer');
@@ -172,41 +169,32 @@
         const hotColdResultsContainer = document.getElementById('hotColdResults');
         const quartileDistributionDisplay = document.getElementById('quartileDistributionDisplay');
         const averageGraphContainer = document.getElementById('averageGraphContainer');
-        // NOUVEAU: Éléments pour l'analyse par dizaine
         const decadeDisplay = document.getElementById('decadeDisplay');
-        // NOUVEAU: Éléments pour l'ajout de tirage
         const addDrawForm = document.getElementById('addDrawForm');
         const addDrawStatus = document.getElementById('addDrawStatus');
         const clearLocalDrawsButton = document.getElementById('clearLocalDrawsButton');
         const LOCAL_STORAGE_KEY = 'localEuromillionsDraws';
         
-        // --- Data & State ---
         let pastDrawsData = []; 
 
-        // --- Core Logic Functions ---
         async function loadPastDraws() {
             try {
                 const response = await fetch('past_draws.json');
                 if (!response.ok) throw new Error(`HTTP ${response.status} en chargeant 'past_draws.json'.`);
                 const fileDraws = await response.json();
                 if (!Array.isArray(fileDraws)) throw new Error("'past_draws.json' doit contenir un array.");
-
                 const localDraws = getLocalDraws();
                 const allDraws = [...localDraws, ...fileDraws];
                 const uniqueDraws = Array.from(new Map(allDraws.map(draw => [draw.date, draw])).values());
-
                 pastDrawsData = uniqueDraws.map(draw => {
                     if (!draw.date || !draw.numeros || !draw.etoiles || !Array.isArray(draw.numeros) || !Array.isArray(draw.etoiles) || draw.numeros.length !== 5 || draw.etoiles.length !== 2) return null;
                     const numeros = draw.numeros.map(n => parseInt(n)).sort((a,b)=>a-b);
                     const etoiles = draw.etoiles.map(e => parseInt(e)).sort((a,b)=>a-b);
                     return { date: draw.date, numeros, etoiles };
                 }).filter(d => d !== null);
-                
                 pastDrawsData.sort((a, b) => new Date(b.date) - new Date(a.date));
-
                 loadingStatus.textContent = `Historique de ${pastDrawsData.length} tirages chargé (${fileDraws.length} du fichier, ${localDraws.length} locaux).`;
                 loadingStatus.className = 'info-message';
-                
                 generateButton.disabled = false;
                 analyzeTrendsButton.disabled = false;
                 generateByMeanButton.disabled = false;
@@ -227,19 +215,19 @@
         async function generateAndDisplayUniqueCombination() {if (chkAvoidHistory.checked && pastDrawsData.length === 0) {loadingStatus.textContent = "L'historique n'est pas chargé mais l'option 'Éviter combinaisons sorties' est cochée...";loadingStatus.className = 'error-message';return;}generateButton.disabled = true;mainNumbersContainer.innerHTML = '<span class="placeholder">Recherche...</span>';starNumbersContainer.innerHTML = '';generatedAverageDisplay.innerHTML = '';attemptsInfo.textContent = '';await new Promise(resolve => setTimeout(resolve, 10));let mainNumbers, starNumbers;let isValidCombination = false;let attempts = 0;const maxAttempts = 75000;do {attempts++;mainNumbers = generateUniqueSortedNumbers(5, 1, 50);starNumbers = generateUniqueSortedNumbers(2, 1, 12);let isRejectedByFilter = false;if (chkAvoidHistory.checked && pastDrawsData.length > 0 && isCombinationAlreadyDrawn(mainNumbers, starNumbers, pastDrawsData)) isRejectedByFilter = true;if (!isRejectedByFilter && chkAvoidSuites.checked && containsConsecutiveSuite(mainNumbers, 3)) isRejectedByFilter = true;if (!isRejectedByFilter && chkPairImpair.checked && !checkPairImpairEquilibrium(mainNumbers, 2)) isRejectedByFilter = true;if (!isRejectedByFilter && chkPetitGrand.checked && !checkPetitGrandEquilibrium(mainNumbers, 2, 25)) isRejectedByFilter = true;if (!isRejectedByFilter) isValidCombination = true;if (attempts >= maxAttempts) {mainNumbersContainer.innerHTML = '<span class="error-message">Trop de tentatives. Essayez de désactiver des filtres.</span>';starNumbersContainer.innerHTML = '';attemptsInfo.textContent = `Échec après ${maxAttempts} tentatives.`;generateButton.disabled = false;return;}} while (!isValidCombination);attemptsInfo.textContent = `Combinaison trouvée après ${attempts.toLocaleString()} tentative(s).`;mainNumbersContainer.innerHTML = mainNumbers.map(n => `<span class="number-ball">${n}</span>`).join('');starNumbersContainer.innerHTML = starNumbers.map(s => `<span class="star-ball">${s}</span>`).join('');const sumGenerated = mainNumbers.reduce((acc, num) => acc + num, 0);const avgGenerated = sumGenerated / mainNumbers.length;generatedAverageDisplay.innerHTML = `Moyenne des numéros principaux : <strong>${avgGenerated.toFixed(1)}</strong>`;generateButton.disabled = false;}
         async function generateByTargetMean() {if (chkAvoidHistory.checked && pastDrawsData.length === 0) {targetMeanNumbersContainer.innerHTML = "<span class='error-message'>Historique non chargé pour le filtre.</span>";return;}const targetMean = parseFloat(targetMeanInput.value);if (isNaN(targetMean) || targetMean < 3 || targetMean > 48) {targetMeanNumbersContainer.innerHTML = "<span class='error-message'>Moyenne cible invalide (doit être entre 3 et 48).</span>";return;}generateByMeanButton.disabled = true;targetMeanNumbersContainer.innerHTML = '<span class="placeholder">Recherche par moyenne cible...</span>';targetMeanStarsContainer.innerHTML = '';targetMeanAverageDisplay.innerHTML = '';targetMeanAttemptsInfo.textContent = '';await new Promise(resolve => setTimeout(resolve, 10));let mainNumbers;let starNumbers = generateUniqueSortedNumbers(2, 1, 12);let isValidCombination = false;let attempts = 0;const maxAttemptsMean = 150000;const targetSum = targetMean * 5;const tolerance = 0.5 * 5;do {attempts++;let tempNumbers = new Set();while(tempNumbers.size < 4) {tempNumbers.add(Math.floor(Math.random() * 50) + 1);}const firstFour = Array.from(tempNumbers);const sumFirstFour = firstFour.reduce((a, b) => a + b, 0);const fifthNumTheory = targetSum - sumFirstFour;let fifthNum = -1;for (let offset = 0; offset <= Math.ceil(tolerance); offset++) {const potentialFifth1 = Math.round(fifthNumTheory + offset);if (potentialFifth1 >= 1 && potentialFifth1 <= 50 && !firstFour.includes(potentialFifth1)) {fifthNum = potentialFifth1; break;}const potentialFifth2 = Math.round(fifthNumTheory - offset);if (potentialFifth2 >= 1 && potentialFifth2 <= 50 && !firstFour.includes(potentialFifth2) && offset !== 0) {fifthNum = potentialFifth2; break;}}if (fifthNum === -1) {if (attempts >= maxAttemptsMean) break;continue;}mainNumbers = [...firstFour, fifthNum].sort((a,b) => a-b);const currentSum = mainNumbers.reduce((a,b) => a+b, 0);if (Math.abs(currentSum - targetSum) > tolerance) {if (attempts >= maxAttemptsMean) break;continue;}let isRejectedByFilter = false;if (chkAvoidHistory.checked && pastDrawsData.length > 0 && isCombinationAlreadyDrawn(mainNumbers, starNumbers, pastDrawsData)) isRejectedByFilter = true;if (!isRejectedByFilter && chkAvoidSuites.checked && containsConsecutiveSuite(mainNumbers, 3)) isRejectedByFilter = true;if (!isRejectedByFilter && chkPairImpair.checked && !checkPairImpairEquilibrium(mainNumbers, 2)) isRejectedByFilter = true;if (!isRejectedByFilter && chkPetitGrand.checked && !checkPetitGrandEquilibrium(mainNumbers, 2, 25)) isRejectedByFilter = true;if (!isRejectedByFilter) isValidCombination = true;} while (!isValidCombination && attempts < maxAttemptsMean);if (isValidCombination) {targetMeanAttemptsInfo.textContent = `Combinaison trouvée après ${attempts.toLocaleString()} tentative(s).`;targetMeanNumbersContainer.innerHTML = mainNumbers.map(n => `<span class="number-ball">${n}</span>`).join('');targetMeanStarsContainer.innerHTML = starNumbers.map(s => `<span class="star-ball">${s}</span>`).join('');const sumGenerated = mainNumbers.reduce((acc, num) => acc + num, 0);const avgGenerated = sumGenerated / mainNumbers.length;targetMeanAverageDisplay.innerHTML = `Moyenne réelle : <strong>${avgGenerated.toFixed(1)}</strong> (Cible: ${targetMean.toFixed(1)})`;} else {targetMeanNumbersContainer.innerHTML = '<span class="error-message">Trop de tentatives pour la moyenne cible avec les filtres actuels.</span>';targetMeanAverageDisplay.innerHTML = '';targetMeanStarsContainer.innerHTML = '';targetMeanAttemptsInfo.textContent = `Échec après ${maxAttemptsMean.toLocaleString()} tentatives.`;}generateByMeanButton.disabled = false;}
         
-        // --- Fonctions d'Analyse ---
         function calculateFrequencies(draws, type) {const frequencies = {};const maxNum = (type === 'numeros') ? 50 : 12;for (let i = 1; i <= maxNum; i++) frequencies[i] = 0;draws.forEach(draw => {if (draw && draw[type]) {draw[type].forEach(num => {if (frequencies.hasOwnProperty(num)) frequencies[num]++;});}});return frequencies;}
         function getHotColdNumbers(frequencies, count, sortOrder = 'desc') {return Object.entries(frequencies).sort((a, b) => {const freqDiff = sortOrder === 'desc' ? b[1] - a[1] : a[1] - b[1];return freqDiff !== 0 ? freqDiff : parseInt(a[0]) - parseInt(b[0]);}).slice(0, count).map(entry => ({ num: parseInt(entry[0]), freq: entry[1] }));}
         function calculateQuartileDistribution(draws) {const quartiles = { q1: 0, q2: 0, q3: 0, q4: 0 };draws.forEach(draw => {if (draw && draw.numeros) {draw.numeros.forEach(num => {if (num >= 1 && num <= 12) quartiles.q1++;else if (num >= 13 && num <= 25) quartiles.q2++;else if (num >= 26 && num <= 38) quartiles.q3++;else if (num >= 39 && num <= 50) quartiles.q4++;});}});return quartiles;}
         function calculatePastAverages(draws) {return draws.map(draw => {if (draw && draw.numeros && draw.numeros.length > 0) {const sum = draw.numeros.reduce((acc, num) => acc + num, 0);return { avg: sum / draw.numeros.length, date: draw.date || 'N/A' };}return null;}).filter(item => item !== null);}
         
-        // NOUVEAU: Fonction pour l'analyse par dizaine
+        // MODIFIÉ: La fonction capture maintenant le numéro ET la date
         function analyzeDecades(draws) {
             const decades = {
                 "1-10": [], "11-20": [], "21-30": [], "31-40": [], "41-50": []
             };
             const MAX_PER_DECADE = 10;
             for(const draw of draws) {
+                if (Object.values(decades).every(arr => arr.length >= MAX_PER_DECADE)) break; // Optimisation
                 for(const num of draw.numeros) {
                     let decadeKey = "";
                     if (num <= 10) decadeKey = "1-10";
@@ -248,8 +236,8 @@
                     else if (num <= 40) decadeKey = "31-40";
                     else if (num <= 50) decadeKey = "41-50";
 
-                    if (decadeKey && decades[decadeKey].length < MAX_PER_DECADE && !decades[decadeKey].includes(num)) {
-                        decades[decadeKey].push(num);
+                    if (decadeKey && decades[decadeKey].length < MAX_PER_DECADE && !decades[decadeKey].some(item => item.num === num)) {
+                        decades[decadeKey].push({ num: num, date: draw.date });
                     }
                 }
             }
@@ -262,11 +250,11 @@
             const toPercent = val => totalNumbers > 0 ? (val / totalNumbers * 100).toFixed(1) : 0;
             quartileDistributionDisplay.innerHTML = `<div class="quartile-item"><strong>Q1 (1-12):</strong> ${data.quartiles.q1} (${toPercent(data.quartiles.q1)}%)</div><div class="quartile-item"><strong>Q2 (13-25):</strong> ${data.quartiles.q2} (${toPercent(data.quartiles.q2)}%)</div><div class="quartile-item"><strong>Q3 (26-38):</strong> ${data.quartiles.q3} (${toPercent(data.quartiles.q3)}%)</div><div class="quartile-item"><strong>Q4 (39-50):</strong> ${data.quartiles.q4} (${toPercent(data.quartiles.q4)}%)</div>`;
             
-            // NOUVEAU: Affichage de l'analyse par dizaine
-            decadeDisplay.innerHTML = Object.entries(data.decades).map(([key, nums]) => `
+            // MODIFIÉ: L'affichage utilise la date dans le title de chaque boule
+            decadeDisplay.innerHTML = Object.entries(data.decades).map(([key, items]) => `
                 <div class="decade-group">
-                    <h4>Dizaine ${key} <span class="frequency-note">(les plus récents)</span></h4>
-                    <div class="decade-balls">${nums.length > 0 ? nums.map(n => `<span class="number-ball">${n}</span>`).join('') : '<span class="placeholder">Aucun numéro sorti dans cette plage.</span>'}</div>
+                    <h4>Dizaine ${key} <span class="frequency-note">(les plus récents, date en survol)</span></h4>
+                    <div class="decade-balls">${items.length > 0 ? items.map(item => `<span class="number-ball" title="Sorti le ${item.date}">${item.num}</span>`).join('') : '<span class="placeholder">Aucun numéro sorti dans cette plage.</span>'}</div>
                 </div>
             `).join('');
 
@@ -300,29 +288,19 @@
                 hotStars: getHotColdNumbers(starFrequencies, displayCount, 'desc'), coldStars: getHotColdNumbers(starFrequencies, displayCount, 'asc'),
                 quartiles: calculateQuartileDistribution(drawsToAnalyze),
                 pastAveragesAndDates: calculatePastAverages(drawsToAnalyze),
-                decades: analyzeDecades(drawsToAnalyze) // NOUVEAU: Passer les données des dizaines
+                decades: analyzeDecades(drawsToAnalyze)
             });
         }
         
-        // --- NOUVEAU: Fonctions pour la gestion des tirages locaux ---
         function getLocalDraws() {
-            try {
-                const drawsJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
-                return drawsJSON ? JSON.parse(drawsJSON) : [];
-            } catch (e) {
-                console.error("Erreur de parsing des tirages locaux:", e);
-                return [];
-            }
+            try { const drawsJSON = localStorage.getItem(LOCAL_STORAGE_KEY); return drawsJSON ? JSON.parse(drawsJSON) : []; } 
+            catch (e) { console.error("Erreur de parsing des tirages locaux:", e); return []; }
         }
         
-        function saveLocalDraws(draws) {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(draws));
-        }
+        function saveLocalDraws(draws) { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(draws)); }
 
         function handleAddDraw(event) {
-            event.preventDefault();
-            addDrawStatus.innerHTML = '';
-
+            event.preventDefault(); addDrawStatus.innerHTML = '';
             const date = document.getElementById('drawDate').value;
             const nums = [
                 parseInt(document.getElementById('num1').value), parseInt(document.getElementById('num2').value),
@@ -333,52 +311,35 @@
                 parseInt(document.getElementById('star1').value), parseInt(document.getElementById('star2').value)
             ];
 
-            // Validation
             if (!date) { addDrawStatus.innerHTML = '<span class="error-message">Veuillez entrer une date.</span>'; return; }
-            if (nums.some(n => isNaN(n) || n < 1 || n > 50)) { addDrawStatus.innerHTML = '<span class="error-message">Numéros invalides (doivent être entre 1 et 50).</span>'; return; }
-            if (stars.some(s => isNaN(s) || s < 1 || s > 12)) { addDrawStatus.innerHTML = '<span class="error-message">Étoiles invalides (doivent être entre 1 et 12).</span>'; return; }
+            if (nums.some(n => isNaN(n) || n < 1 || n > 50)) { addDrawStatus.innerHTML = '<span class="error-message">Numéros invalides (1-50).</span>'; return; }
+            if (stars.some(s => isNaN(s) || s < 1 || s > 12)) { addDrawStatus.innerHTML = '<span class="error-message">Étoiles invalides (1-12).</span>'; return; }
             if (new Set(nums).size !== 5) { addDrawStatus.innerHTML = '<span class="error-message">Les 5 numéros doivent être uniques.</span>'; return; }
             if (new Set(stars).size !== 2) { addDrawStatus.innerHTML = '<span class="error-message">Les 2 étoiles doivent être uniques.</span>'; return; }
-
-            const newDraw = {
-                date: date,
-                numeros: nums.sort((a,b)=>a-b),
-                etoiles: stars.sort((a,b)=>a-b)
-            };
-
+            const newDraw = { date: date, numeros: nums.sort((a,b)=>a-b), etoiles: stars.sort((a,b)=>a-b) };
             const localDraws = getLocalDraws();
-            // Eviter les doublons par date
             const existingIndex = localDraws.findIndex(d => d.date === newDraw.date);
-            if (existingIndex > -1) {
-                localDraws[existingIndex] = newDraw; // Remplacer
-            } else {
-                localDraws.push(newDraw);
-            }
+            if (existingIndex > -1) { localDraws[existingIndex] = newDraw; } else { localDraws.push(newDraw); }
             saveLocalDraws(localDraws);
-
-            addDrawStatus.innerHTML = '<span class="info-message">Tirage enregistré avec succès ! L\'historique est mis à jour.</span>';
+            addDrawStatus.innerHTML = '<span class="info-message">Tirage enregistré ! Rechargement des données...</span>';
             addDrawForm.reset();
-            loadPastDraws(); // Recharger toutes les données pour tout synchroniser
+            loadPastDraws();
         }
 
         function handleClearLocalDraws() {
             if (confirm("Êtes-vous sûr de vouloir supprimer tous les tirages que vous avez ajoutés localement ? Cette action est irréversible.")) {
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
-                addDrawStatus.innerHTML = '<span class="info-message">Tous les tirages locaux ont été effacés.</span>';
-                loadPastDraws(); // Recharger pour refléter la suppression
+                addDrawStatus.innerHTML = '<span class="info-message">Tirages locaux effacés. Rechargement...</span>';
+                loadPastDraws();
             }
         }
 
-        // --- Event Listeners ---
         generateButton.addEventListener('click', generateAndDisplayUniqueCombination);
         generateByMeanButton.addEventListener('click', generateByTargetMean);
         analyzeTrendsButton.addEventListener('click', handleAnalyzeTrends);
-        // NOUVEAU: Listeners pour le formulaire d'ajout
         addDrawForm.addEventListener('submit', handleAddDraw);
         clearLocalDrawsButton.addEventListener('click', handleClearLocalDraws);
-
         window.addEventListener('load', loadPastDraws);
-
     </script>
 </body>
 </html>
