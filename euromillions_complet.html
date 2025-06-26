@@ -106,7 +106,7 @@
         <div class="analysis-section" id="hotColdResults"><h3>Numéros Chauds/Froids</h3></div>
         <div class="analysis-section" id="quartileResults"><h3>Distribution par Quartiles (Numéros Principaux)</h3><div id="quartileDistributionDisplay"><span class="placeholder">Cliquez sur "Analyser".</span></div></div>
         <div class="analysis-section" id="decadeAnalysisResults">
-            <h3>Derniers Numéros Sortis par Dizaine</h3>
+            <h3>Sorties Récentes par Dizaine</h3>
             <div id="decadeDisplay"><span class="placeholder">Cliquez sur "Analyser".</span></div>
         </div>
         <div class="analysis-section" id="averageGraphSection">
@@ -220,14 +220,16 @@
         function calculateQuartileDistribution(draws) {const quartiles = { q1: 0, q2: 0, q3: 0, q4: 0 };draws.forEach(draw => {if (draw && draw.numeros) {draw.numeros.forEach(num => {if (num >= 1 && num <= 12) quartiles.q1++;else if (num >= 13 && num <= 25) quartiles.q2++;else if (num >= 26 && num <= 38) quartiles.q3++;else if (num >= 39 && num <= 50) quartiles.q4++;});}});return quartiles;}
         function calculatePastAverages(draws) {return draws.map(draw => {if (draw && draw.numeros && draw.numeros.length > 0) {const sum = draw.numeros.reduce((acc, num) => acc + num, 0);return { avg: sum / draw.numeros.length, date: draw.date || 'N/A' };}return null;}).filter(item => item !== null);}
         
-        // MODIFIÉ: La fonction capture maintenant le numéro ET la date
+        // MODIFIÉ: La fonction n'exclut plus les doublons.
         function analyzeDecades(draws) {
             const decades = {
                 "1-10": [], "11-20": [], "21-30": [], "31-40": [], "41-50": []
             };
             const MAX_PER_DECADE = 10;
             for(const draw of draws) {
-                if (Object.values(decades).every(arr => arr.length >= MAX_PER_DECADE)) break; // Optimisation
+                // Si toutes les listes de dizaines sont pleines, on peut arrêter.
+                if (Object.values(decades).every(arr => arr.length >= MAX_PER_DECADE)) break; 
+                
                 for(const num of draw.numeros) {
                     let decadeKey = "";
                     if (num <= 10) decadeKey = "1-10";
@@ -236,7 +238,8 @@
                     else if (num <= 40) decadeKey = "31-40";
                     else if (num <= 50) decadeKey = "41-50";
 
-                    if (decadeKey && decades[decadeKey].length < MAX_PER_DECADE && !decades[decadeKey].some(item => item.num === num)) {
+                    // On ajoute le numéro tant que la liste de sa dizaine n'est pas pleine.
+                    if (decadeKey && decades[decadeKey].length < MAX_PER_DECADE) {
                         decades[decadeKey].push({ num: num, date: draw.date });
                     }
                 }
@@ -250,10 +253,10 @@
             const toPercent = val => totalNumbers > 0 ? (val / totalNumbers * 100).toFixed(1) : 0;
             quartileDistributionDisplay.innerHTML = `<div class="quartile-item"><strong>Q1 (1-12):</strong> ${data.quartiles.q1} (${toPercent(data.quartiles.q1)}%)</div><div class="quartile-item"><strong>Q2 (13-25):</strong> ${data.quartiles.q2} (${toPercent(data.quartiles.q2)}%)</div><div class="quartile-item"><strong>Q3 (26-38):</strong> ${data.quartiles.q3} (${toPercent(data.quartiles.q3)}%)</div><div class="quartile-item"><strong>Q4 (39-50):</strong> ${data.quartiles.q4} (${toPercent(data.quartiles.q4)}%)</div>`;
             
-            // MODIFIÉ: L'affichage utilise la date dans le title de chaque boule
+            // MODIFIÉ: Le texte d'aide reflète le nouveau comportement.
             decadeDisplay.innerHTML = Object.entries(data.decades).map(([key, items]) => `
                 <div class="decade-group">
-                    <h4>Dizaine ${key} <span class="frequency-note">(les plus récents, date en survol)</span></h4>
+                    <h4>Dizaine ${key} <span class="frequency-note">(10 dernières sorties, doublons inclus)</span></h4>
                     <div class="decade-balls">${items.length > 0 ? items.map(item => `<span class="number-ball" title="Sorti le ${item.date}">${item.num}</span>`).join('') : '<span class="placeholder">Aucun numéro sorti dans cette plage.</span>'}</div>
                 </div>
             `).join('');
@@ -279,10 +282,8 @@
             if (isNaN(windowSize) || windowSize < 1 || isNaN(displayCount) || displayCount < 1) {hotColdResultsContainer.innerHTML = msg('error-message', 'Valeurs invalides.'); return;}
             const actualWindowSize = Math.min(windowSize, pastDrawsData.length);
             const drawsToAnalyze = pastDrawsData.slice(0, actualWindowSize); 
-
             const mainFrequencies = calculateFrequencies(drawsToAnalyze, 'numeros');
             const starFrequencies = calculateFrequencies(drawsToAnalyze, 'etoiles');
-            
             displayAnalysis({
                 hotMain: getHotColdNumbers(mainFrequencies, displayCount, 'desc'), coldMain: getHotColdNumbers(mainFrequencies, displayCount, 'asc'),
                 hotStars: getHotColdNumbers(starFrequencies, displayCount, 'desc'), coldStars: getHotColdNumbers(starFrequencies, displayCount, 'asc'),
@@ -310,7 +311,6 @@
             const stars = [
                 parseInt(document.getElementById('star1').value), parseInt(document.getElementById('star2').value)
             ];
-
             if (!date) { addDrawStatus.innerHTML = '<span class="error-message">Veuillez entrer une date.</span>'; return; }
             if (nums.some(n => isNaN(n) || n < 1 || n > 50)) { addDrawStatus.innerHTML = '<span class="error-message">Numéros invalides (1-50).</span>'; return; }
             if (stars.some(s => isNaN(s) || s < 1 || s > 12)) { addDrawStatus.innerHTML = '<span class="error-message">Étoiles invalides (1-12).</span>'; return; }
